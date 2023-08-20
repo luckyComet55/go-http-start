@@ -8,7 +8,7 @@ import (
 
 type Server struct {
 	Port         string
-	interceptors map[string]Interceptor
+	interceptors map[string]interceptor
 	multiplexor  *http.ServeMux
 }
 
@@ -16,17 +16,19 @@ func NewServer(port string) *Server {
 	return &Server{
 		Port:         port,
 		multiplexor:  http.NewServeMux(),
-		interceptors: make(map[string]Interceptor),
+		interceptors: make(map[string]interceptor),
 	}
 }
 
-func (s *Server) AddRoute(e Endpoint) *Server {
-	i, ok := s.interceptors[e.path]
-	if !ok {
-		i = newInterceptor()
-		s.interceptors[e.path] = i
+func (s *Server) AddRoute(endpoints ...Endpoint) *Server {
+	for _, e := range endpoints {
+		i, ok := s.interceptors[e.Path]
+		if !ok {
+			i = newInterceptor()
+			s.interceptors[e.Path] = i
+		}
+		i.addMethodHandler(e.Method, e)
 	}
-	i.addMethodHandler(e.method, e)
 	return s
 }
 

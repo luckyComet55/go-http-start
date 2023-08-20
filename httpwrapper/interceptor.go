@@ -5,28 +5,30 @@ import (
 	"net/http"
 )
 
-type Interceptor struct {
+type interceptor struct {
 	handlers map[httpMethod]Endpoint
 }
 
-func (i Interceptor) intercept(w http.ResponseWriter, r *http.Request) {
+func (i interceptor) intercept(w http.ResponseWriter, r *http.Request) {
 	method := httpMethod(r.Method)
 	fmt.Println(method)
 	endpoint, ok := i.handlers[method]
+	var runtimeHandler http.HandlerFunc
 	if !ok {
-		http.NotFound(w, r)
-		return
+		runtimeHandler = http.NotFound
+	} else {
+		runtimeHandler = endpoint.Handler
 	}
-	endpoint.handler(w, r)
+	runtimeHandler(w, r)
 }
 
-func newInterceptor() Interceptor {
-	return Interceptor{
+func newInterceptor() interceptor {
+	return interceptor{
 		handlers: make(map[httpMethod]Endpoint),
 	}
 }
 
-func (i Interceptor) addMethodHandler(m httpMethod, e Endpoint) {
+func (i interceptor) addMethodHandler(m httpMethod, e Endpoint) {
 	if !m.isValid() {
 		return
 	}
