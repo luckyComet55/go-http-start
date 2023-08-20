@@ -11,6 +11,9 @@ type Endpoint struct {
 }
 
 func NewEndpoint(path string, method httpMethod, handler http.HandlerFunc) Endpoint {
+	if path[len(path)-1] != '/' {
+		path += "/"
+	}
 	return Endpoint{
 		Path:    path,
 		Method:  method,
