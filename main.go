@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	server := httpwrapper.NewServer(":3003")
+	server := httpwrapper.NewServer("3003")
 	server.AddRoute(
 		httpwrapper.NewEndpoint(
 			"/",

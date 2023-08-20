@@ -37,6 +37,6 @@ func (s *Server) Start() {
 		fmt.Printf("route %s\n", path)
 		s.multiplexor.HandleFunc(path, interceptor.intercept)
 	}
-	fmt.Println("Server started")
-	log.Fatal(http.ListenAndServe(s.Port, s.multiplexor))
+	fmt.Printf("Server started at %s\n", fmt.Sprintf("http://localhost:%s", s.Port))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", s.Port), s.multiplexor))
 }
