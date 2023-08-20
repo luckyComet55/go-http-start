@@ -13,7 +13,6 @@ func main() {
 		httpwrapper.NewEndpoint(
 			"/",
 			"GET",
-			nil,
 			func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "Велкоме!")
 			},
@@ -21,7 +20,6 @@ func main() {
 		httpwrapper.NewEndpoint(
 			"/home",
 			"GET",
-			nil,
 			func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "Home!")
 			},

@@ -5,17 +5,15 @@ import (
 )
 
 type Endpoint struct {
-	Path       string
-	Method     httpMethod
-	PathParams []string
-	Handler    http.HandlerFunc
+	Path    string
+	Method  httpMethod
+	Handler http.HandlerFunc
 }
 
-func NewEndpoint(path string, method httpMethod, params []string, handler http.HandlerFunc) Endpoint {
+func NewEndpoint(path string, method httpMethod, handler http.HandlerFunc) Endpoint {
 	return Endpoint{
-		Path:       path,
-		Method:     method,
-		PathParams: params,
-		Handler:    handler,
+		Path:    path,
+		Method:  method,
+		Handler: handler,
 	}
 }

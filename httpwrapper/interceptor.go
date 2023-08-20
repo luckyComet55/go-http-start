@@ -6,6 +6,7 @@ import (
 )
 
 type interceptor struct {
+	path     string
 	handlers map[httpMethod]Endpoint
 }
 
@@ -22,8 +23,9 @@ func (i interceptor) intercept(w http.ResponseWriter, r *http.Request) {
 	runtimeHandler(w, r)
 }
 
-func newInterceptor() interceptor {
+func newInterceptor(path string) interceptor {
 	return interceptor{
+		path:     path,
 		handlers: make(map[httpMethod]Endpoint),
 	}
 }

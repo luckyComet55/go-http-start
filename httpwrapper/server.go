@@ -24,7 +24,7 @@ func (s *Server) AddRoute(endpoints ...Endpoint) *Server {
 	for _, e := range endpoints {
 		i, ok := s.interceptors[e.Path]
 		if !ok {
-			i = newInterceptor()
+			i = newInterceptor(e.Path)
 			s.interceptors[e.Path] = i
 		}
 		i.addMethodHandler(e.Method, e)
