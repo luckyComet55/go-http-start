@@ -19,7 +19,7 @@ func main() {
 		),
 		httpwrapper.NewEndpoint(
 			"/home",
-			"GET",
+			"GEsT",
 			func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, "Home!")
 			},

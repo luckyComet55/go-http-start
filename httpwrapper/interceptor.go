@@ -40,10 +40,11 @@ func newInterceptor(path string) interceptor {
 	}
 }
 
-func (i interceptor) addMethodHandler(m httpMethod, e Endpoint) {
+func (i interceptor) addMethodHandler(m httpMethod, e Endpoint) error {
 	if !m.isValid() {
-		return
+		return newUnsupportedMethodError(string(m))
 	}
 
 	i.handlers[m] = e
+	return nil
 }

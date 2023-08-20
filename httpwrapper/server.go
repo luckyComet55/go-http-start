@@ -27,7 +27,9 @@ func (s *Server) AddRoute(endpoints ...Endpoint) *Server {
 			i = newInterceptor(e.Path)
 			s.interceptors[e.Path] = i
 		}
-		i.addMethodHandler(e.Method, e)
+		if err := i.addMethodHandler(e.Method, e); err != nil {
+			panic(err)
+		}
 	}
 	return s
 }
