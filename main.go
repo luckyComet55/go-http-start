@@ -13,16 +13,24 @@ func main() {
 		httpwrapper.NewEndpoint(
 			"/",
 			"GET",
-			func(w http.ResponseWriter, r *http.Request) {
+			func(w http.ResponseWriter, c httpwrapper.Context) {
 				fmt.Fprintln(w, "Велкоме!")
 			},
 		),
 		httpwrapper.NewEndpoint(
 			"/home",
-			"GEsT",
-			func(w http.ResponseWriter, r *http.Request) {
+			"GET",
+			func(w http.ResponseWriter, c httpwrapper.Context) {
 				fmt.Fprintln(w, "Home!")
 			},
-		))
+		),
+		httpwrapper.NewEndpoint(
+			"/name/{firstName}/{lastName}",
+			"GET",
+			func(w http.ResponseWriter, c httpwrapper.Context) {
+				fmt.Fprintln(w, "Name!")
+			},
+		),
+	)
 	server.Start()
 }

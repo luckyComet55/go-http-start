@@ -4,41 +4,43 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 )
 
+type methodTable map[httpMethod]Handler
+type pathTable map[*regexp.Regexp]methodTable
+
 type Server struct {
-	Port         string
-	interceptors map[string]interceptor
-	multiplexor  *http.ServeMux
+	Port        string
+	pathMap     pathTable
+	multiplexor *http.ServeMux
+}
+
+func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
+	// Intercepting stuff
 }
 
 func NewServer(port string) *Server {
 	return &Server{
-		Port:         port,
-		multiplexor:  http.NewServeMux(),
-		interceptors: make(map[string]interceptor),
+		Port:        port,
+		pathMap:     make(pathTable),
+		multiplexor: http.NewServeMux(),
 	}
 }
 
 func (s *Server) AddRoute(endpoints ...Endpoint) *Server {
 	for _, e := range endpoints {
-		i, ok := s.interceptors[e.Path]
-		if !ok {
-			i = newInterceptor(e.Path)
-			s.interceptors[e.Path] = i
+		pathRegex := e.transformPathToRegexpStr()
+		if _, ok := s.pathMap[pathRegex]; !ok {
+			s.pathMap[pathRegex] = make(methodTable)
 		}
-		if err := i.addMethodHandler(e.Method, e); err != nil {
-			panic(err)
-		}
+		s.pathMap[pathRegex][e.Method] = e.Handler
 	}
 	return s
 }
 
 func (s *Server) Start() {
-	for path, interceptor := range s.interceptors {
-		fmt.Printf("route %s\n", path)
-		s.multiplexor.HandleFunc(path, interceptor.intercept)
-	}
+	s.multiplexor.HandleFunc("/", s.rootInterceptor)
 	fmt.Printf("Server started at %s\n", fmt.Sprintf("http://localhost:%s", s.Port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", s.Port), s.multiplexor))
 }

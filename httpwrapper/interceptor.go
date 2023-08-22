@@ -20,15 +20,18 @@ func (i interceptor) intercept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	method := httpMethod(r.Method)
-	fmt.Println(method)
 	endpoint, ok := i.handlers[method]
-	var runtimeHandler http.HandlerFunc
 	if !ok {
-		runtimeHandler = http.NotFound
+		http.NotFound(w, r)
 	} else {
-		runtimeHandler = endpoint.Handler
+		params, err := parseParms(endpoint.Path, path)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		c := newContext(params, r)
+		endpoint.Handler(w, c)
 	}
-	runtimeHandler(w, r)
 }
 
 func newInterceptor(path string) interceptor {
