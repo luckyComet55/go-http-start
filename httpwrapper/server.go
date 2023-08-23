@@ -15,13 +15,9 @@ type Server struct {
 	multiplexor *http.ServeMux
 }
 
-func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
-	// Intercepting stuff
-
-	path := r.URL.Path
-	method := r.Method
+func (s *Server) findRouteHadler(path string, method httpMethod) (Handler, []pathParamRepr) {
 	var handler Handler = ErrNotFound
-	fmt.Printf("intercepting route %s\n", path)
+	var paramList []pathParamRepr = nil
 	for k, v := range s.pathMap {
 		fmt.Printf("now %v\n", v[0].regexpSample)
 		if !v[0].regexpSample.MatchString(path) {
@@ -33,6 +29,7 @@ func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
 			if e.Method == httpMethod(method) {
 				foundCorrectMethod = true
 				handler = e.Handler
+				paramList = e.paramsRepr
 				break
 			}
 		}
@@ -41,7 +38,17 @@ func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
 		}
 		break
 	}
-	context, err := newContext(r)
+	return handler, paramList
+}
+
+func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
+	// Intercepting stuff
+
+	path := r.URL.Path
+	method := r.Method
+	fmt.Printf("intercepting route %s\n", path)
+	handler, samplePath := s.findRouteHadler(path, httpMethod(method))
+	context, err := newContext(r, samplePath)
 	if err != nil {
 		handler = UserHttpErrBuilder("could not parse params", 400)
 	}

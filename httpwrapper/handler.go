@@ -9,7 +9,6 @@ type Handler func(w http.ResponseWriter, c Context)
 
 func ErrNotFound(w http.ResponseWriter, c Context) {
 	http.NotFound(w, c.Request)
-	return
 }
 
 func UserHttpErrBuilder(msg string, statusCode int) Handler {
