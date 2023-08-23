@@ -7,10 +7,11 @@ import (
 )
 
 type Endpoint struct {
-	Path       string
-	Method     httpMethod
-	Handler    func(w http.ResponseWriter, c Context)
-	paramsRepr []pathParamRepr
+	Path         string
+	Method       httpMethod
+	Handler      func(w http.ResponseWriter, c Context)
+	paramsRepr   []pathParamRepr
+	regexpSample *regexp.Regexp
 }
 
 type pathParamRepr struct {
@@ -43,26 +44,28 @@ func getPathParamRepr(pathSample string) []pathParamRepr {
 	return pathParams
 }
 
-func (e Endpoint) transformPathToRegexpStr() *regexp.Regexp {
-	path := e.Path
-	fmt.Printf("Input str %s\n", path)
+func transformPathToRegexpStr(path string) *regexp.Regexp {
+	correctionChecker := regexp.MustCompile(`{[0-9]+?[A-Za-z]*?}`)
+	if loc := correctionChecker.FindStringIndex(path); loc != nil {
+		panic(fmt.Sprintf("incorrect path variable name %s at path %s", path[loc[0]:loc[1]], path))
+	}
+	// TODO: filter out variable names, which start with digits
 	replacer := regexp.MustCompile(`{[A-Za-z]+?[0-9]*?}`)
-	res := replacer.ReplaceAllString(path, "[0-9A-Za-z]+?")
-	fmt.Printf("Output str %s\n", res)
+	// TODO: maybe optimize this part later
+	res := "^" + replacer.ReplaceAllString(path, "[0-9A-Za-z]+?") + "/?$"
 	return regexp.MustCompile(res)
 }
 
 func NewEndpoint(path string, method httpMethod, handler func(w http.ResponseWriter, c Context)) Endpoint {
-	if path[len(path)-1] != '/' {
-		path += "/"
+	if path[len(path)-1] == '/' {
+		path = path[0 : len(path)-1]
 	}
 
-	pathParamsRepr := getPathParamRepr(path)
-
 	return Endpoint{
-		Path:       path,
-		Method:     method,
-		Handler:    handler,
-		paramsRepr: pathParamsRepr,
+		Path:         path,
+		Method:       method,
+		Handler:      handler,
+		paramsRepr:   getPathParamRepr(path),
+		regexpSample: transformPathToRegexpStr(path),
 	}
 }

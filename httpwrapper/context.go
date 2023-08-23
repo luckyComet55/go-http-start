@@ -7,11 +7,15 @@ type Context struct {
 	*http.Request
 }
 
-func newContext(pathParams map[string]string, r *http.Request) Context {
+func newContext(r *http.Request) (Context, error) {
+	//	params, err := parseParms(r.URL.Path, r.URL.Path)
+	// if err {
+	//
+	// }
 	return Context{
-		PathParams: pathParams,
+		PathParams: make(map[string]string),
 		Request:    r,
-	}
+	}, nil
 }
 
 func parseParms(pathParamsSample string, path string) (map[string]string, error) {

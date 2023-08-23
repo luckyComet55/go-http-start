@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"regexp"
 )
 
-type methodTable map[httpMethod]Handler
-type pathTable map[*regexp.Regexp]methodTable
+type endpointSlice []Endpoint
+type pathTable map[string]endpointSlice
 
 type Server struct {
 	Port        string
@@ -18,6 +17,36 @@ type Server struct {
 
 func (s *Server) rootInterceptor(w http.ResponseWriter, r *http.Request) {
 	// Intercepting stuff
+
+	path := r.URL.Path
+	method := r.Method
+	var handler Handler = ErrNotFound
+	fmt.Printf("intercepting route %s\n", path)
+	for k, v := range s.pathMap {
+		fmt.Printf("now %v\n", v[0].regexpSample)
+		if !v[0].regexpSample.MatchString(path) {
+			continue
+		}
+		fmt.Printf("found path: %s -> %s\n", k, path)
+		foundCorrectMethod := false
+		for _, e := range v {
+			if e.Method == httpMethod(method) {
+				foundCorrectMethod = true
+				handler = e.Handler
+				break
+			}
+		}
+		if !foundCorrectMethod {
+			handler = UserHttpErrBuilder("method not allowed", 405)
+		}
+		break
+	}
+	context, err := newContext(r)
+	if err != nil {
+		handler = UserHttpErrBuilder("could not parse params", 400)
+	}
+	fmt.Printf("intercepting end\n")
+	handler(w, context)
 }
 
 func NewServer(port string) *Server {
@@ -28,15 +57,15 @@ func NewServer(port string) *Server {
 	}
 }
 
-func (s *Server) AddRoute(endpoints ...Endpoint) *Server {
-	for _, e := range endpoints {
-		pathRegex := e.transformPathToRegexpStr()
-		if _, ok := s.pathMap[pathRegex]; !ok {
-			s.pathMap[pathRegex] = make(methodTable)
-		}
-		s.pathMap[pathRegex][e.Method] = e.Handler
+func (s *Server) AddRoute(endpoint Endpoint) error {
+	if !endpoint.Method.isValid() {
+		return newUnsupportedMethodError(string(endpoint.Method))
 	}
-	return s
+	if _, ok := s.pathMap[endpoint.Path]; !ok {
+		s.pathMap[endpoint.Path] = make(endpointSlice, 0, _SUPPORTED_METHOD_NUM)
+	}
+	s.pathMap[endpoint.Path] = append(s.pathMap[endpoint.Path], endpoint)
+	return nil
 }
 
 func (s *Server) Start() {
